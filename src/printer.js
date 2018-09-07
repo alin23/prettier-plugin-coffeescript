@@ -1,6 +1,6 @@
 'use strict'
 
-const util = require('prettier/src/common/util')
+const util = require('prettier/src/common/util-shared')
 const comments = require('prettier/src/main/comments')
 const {
   isNextLineEmpty,
@@ -1422,25 +1422,34 @@ function printPathNoParens(path, options, print) {
         n.expression.type === 'TaggedTemplateExpression' ||
         (isJSXNode(parent) && (isIf(n.expression) || isBinaryish(n.expression)))
 
+        var leadingSpace = ' '
+        if (!print || isObjectish(n.expression)) {
+          leadingSpace = ''
+        }
+        var trailingSpace = ' '
+        if (!print || isObjectish(n.expression)) {
+          trailingSpace = ''
+        }
+
       if (shouldInline) {
         return group(
           concat([
-            '{',
+            `{${leadingSpace}`,
             path.call(print, 'expression'),
             shouldInlineButStillClosingLinebreak ? softline : '',
             // lineSuffixBoundary,
-            '}',
+            `${trailingSpace}}`,
           ])
         )
       }
 
       return group(
         concat([
-          '{',
+          `{${leadingSpace}`,
           indent(concat([softline, path.call(print, 'expression')])),
           softline,
           // lineSuffixBoundary,
-          '}',
+          `${trailingSpace}}`,
         ])
       )
     }
@@ -1970,7 +1979,11 @@ function printTemplateLiteral(path, print, {omitQuotes} = {}) {
 
       // const aligned = addAlignmentToDoc(printed, indentSize, tabWidth)
 
-      parts.push(group(concat(['#{', printed, lineSuffixBoundary, '}'])))
+      if (printed) {
+        parts.push(group(concat(['#{ ', printed, lineSuffixBoundary, ' }'])))
+      } else {
+        parts.push(group(concat(['#{}'])))
+      }
     }
   }, 'quasis')
 
@@ -3194,21 +3207,26 @@ function printArgumentsList(path, options, print) {
   }, 'arguments')
 
   const parent = path.getParentNode()
-  const parensNecessary = callParensNecessary(path)
-  const parensOptional =
-    !parensNecessary &&
-    node.arguments.length &&
-    (callParensOptional(path, options) ||
-      (parent.type === 'CallExpression' &&
-        node === parent.arguments[parent.arguments.length - 1] &&
-        callParensOptional(path, options, {stackOffset: 1})) ||
-      (isBinaryish(parent) &&
-        node === parent.right &&
-        callParensOptional(path, options, {stackOffset: 1})))
-  const parensOptionalIfParentBreaks =
-    !parensNecessary &&
-    !parensOptional &&
-    callParensOptionalIfParentBreaks(path, options)
+
+  const parensNecessary = true
+  const parensOptional = false
+  const parensOptionalIfParentBreaks = false
+
+  // const parensNecessary = callParensNecessary(path)
+  // const parensOptional =
+  //   !parensNecessary &&
+  //   node.arguments.length &&
+  //   (callParensOptional(path, options) ||
+  //     (parent.type === 'CallExpression' &&
+  //       node === parent.arguments[parent.arguments.length - 1] &&
+  //       callParensOptional(path, options, {stackOffset: 1})) ||
+  //     (isBinaryish(parent) &&
+  //       node === parent.right &&
+  //       callParensOptional(path, options, {stackOffset: 1})))
+  // const parensOptionalIfParentBreaks =
+  //   !parensNecessary &&
+  //   !parensOptional &&
+  //   callParensOptionalIfParentBreaks(path, options)
 
   const shouldntBreak =
     args.length === 1 &&
@@ -3583,7 +3601,7 @@ function printFunctionParams(path, print, options) {
 
   if (!(params && params.length)) {
     if (!hasDanglingComments(fun)) {
-      return ''
+      return '() '
     }
     return concat([
       '(',

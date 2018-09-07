@@ -20,8 +20,8 @@
     "node": ">= 6"
   },
   "dependencies": {
-    "coffeescript": "github:helixbass/coffeescript#d2bada7",
-    "prettier": "github:helixbass/prettier#f5366a5"
+    "coffeescript": "^2.3.2",
+    "prettier": "^1.15.1"
   },
   "devDependencies": {
     "eslint": "^4.14.0",

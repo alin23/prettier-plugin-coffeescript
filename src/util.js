@@ -1,6 +1,6 @@
 'use strict'
 
-const {hasNewline, skipNewline} = require('prettier/src/common/util')
+const {hasNewline, skipNewline} = require('prettier/src/common/util-shared')
 
 function skip(chars) {
   return (text, index, opts) => {
